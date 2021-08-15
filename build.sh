@@ -14,6 +14,12 @@ function main() {
 
     copyFrontend "$fe_path" "./src/src/main/resources/static"
 
+    buildContainer
+
+}
+
+function buildContainer() {
+    docker build .
 }
 
 function cleanup() {
