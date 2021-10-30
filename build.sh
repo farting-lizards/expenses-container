@@ -1,25 +1,34 @@
 #!/bin/bash -e
 
 function main() {
+    local do_build=true
+    if [[ "$1" == "--skip-build" ]]; then
+        do_build=false
+        shift
+    fi
     local fe_path="${1:?No frontend path passed}"
     local be_path="${2:?No backend path passed}"
+    local arch="${3}"
 
-    cleanup
+    if $do_build; then
+        cleanup
 
-    buildFrontend "$fe_path"
+        buildFrontend "$fe_path"
 
-    buildBackend "$be_path"
+        buildBackend "$be_path"
 
-    copyBackend "$be_path" "./src"
+        copyBackend "$be_path" "./src"
 
-    copyFrontend "$fe_path" "./src/src/main/resources/static"
+        copyFrontend "$fe_path" "./src/src/main/resources/static"
+    fi
 
-    buildContainer
+    buildContainer "$arch"
 
 }
 
 function buildContainer() {
-    docker build .
+    local arch="$1"
+    podman build ${arch:+--arch=$arch} .
 }
 
 function cleanup() {
@@ -30,6 +39,8 @@ function buildFrontend() {
     local fe_path="${1:?No frontend path passed}"
     
     cd "${fe_path}"
+    rm -rf node_modules
+    yarn install --frozen-lockfile
     yarn run build
     cd -
 }
