@@ -1,13 +1,19 @@
-#!/bin/bash -e
+#!/bin/bash
+
+set -o errexit
+set -o nounset
 
 
 function help() {
     cat <<EOH
-    Usage: $0 [-h|--skip-build] PATH_TO_FRONTEND_REPO PATH_TO_BACKEND_REPO
+    Usage: $0 [-h|[-x] --skip-build] PATH_TO_FRONTEND_REPO PATH_TO_BACKEND_REPO
 
     Options:
         -h
             Show this help.
+
+        -x
+            Be extra verbose
 
         --skip-build
             If specified, will only build the container, but not copy
@@ -31,13 +37,17 @@ function main() {
         help
         exit 0
     fi
+    if [[ "$1" == "-x" ]]; then
+        set -x
+        shift
+    fi
     if [[ "$1" == "--skip-build" ]]; then
         do_build=false
         shift
     fi
     local fe_path="${1:?No frontend path passed}"
     local be_path="${2:?No backend path passed}"
-    local arch="${3}"
+    local arch="${3:-}"
 
     if $do_build; then
         cleanup
@@ -56,7 +66,7 @@ function main() {
 }
 
 function buildContainer() {
-    local arch="$1"
+    local arch="${1:-}"
     podman build ${arch:+--arch=$arch} .
 }
 
@@ -78,6 +88,12 @@ function buildBackend() {
     local be_path="${1:?No backend path passed}"
 
     cd "${be_path}"
+    java11_dir=$(ls -d /usr/lib/jvm/java-11-openjdk-* | head -n 1)
+    if ! [[ -d "$java11_dir" ]]; then
+        echo "Unable to find Java11 home dir, might fail..."
+    else
+        export JAVA_HOME=$java11_dir
+    fi
     ./gradlew build
     cd -
 }
