@@ -33,6 +33,11 @@ EOH
 
 function main() {
     local do_build=true
+    if [[ $# -lt 3 ]]; then
+        echo "Not enough arguments passed"
+        help
+        exit 1
+    fi
     if [[ "$1" == "-h" ]]; then
         help
         exit 0
@@ -67,7 +72,10 @@ function main() {
 
 function buildContainer() {
     local arch="${1:-}"
-    podman build ${arch:+--arch=$arch} .
+    podman build \
+        --tag "expenses-app:dev-latest" \
+        ${arch:+--arch=$arch} \
+        .
 }
 
 function cleanup() {
