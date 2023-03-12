@@ -1,7 +1,36 @@
 #!/bin/bash -e
 
+
+function help() {
+    cat <<EOH
+    Usage: $0 [-h|--skip-build] PATH_TO_FRONTEND_REPO PATH_TO_BACKEND_REPO
+
+    Options:
+        -h
+            Show this help.
+
+        --skip-build
+            If specified, will only build the container, but not copy
+            any code or files from the frontend or the backend
+
+    Arguments:
+        PATH_TO_FRONTEND_REPO
+            Path to the directory containing the frontend code.
+
+        PATH_TO_BACKEND_REPO
+            Path to the directory containing the backend server code.
+
+    Example:
+        ./build.sh ../expenses-react ../expenses-server
+EOH
+}
+
 function main() {
     local do_build=true
+    if [[ "$1" == "-h" ]]; then
+        help
+        exit 0
+    fi
     if [[ "$1" == "--skip-build" ]]; then
         do_build=false
         shift
